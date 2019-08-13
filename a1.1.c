@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
     limit.rlim_cur = 1024*1024*1024;
     setrlimit(RLIMIT_STACK,&limit);
 	printf("%ld, %ld \n",limit.rlim_cur, limit.rlim_max);
+    
     if (argc < 2) {
 		size = SIZE;
 	} else {
