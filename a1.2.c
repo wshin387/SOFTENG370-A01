@@ -104,13 +104,13 @@ int main(int argc, char *argv[]) {
     pthread_t thread;
     pthread_attr_t attr;
     pthread_attr_init(&attr);       //set the stack size attribute
-    pthread_attr_setstacksize(&attr,1024*1024*1024);
+    pthread_attr_setstacksize(&attr, 1024*1024*1024);
 
-    pthread_create(&thread,&attr,merge_sort,(void *) &left_block);      
+    pthread_create(&thread, &attr, merge_sort, (void *) &left_block);      
     printf("starting---\n");
     merge_sort(&right_block);
-    pthread_join(thread,NULL);      //blocks until rightblock merge
-    merge(&left_block,&right_block);
+    pthread_join(thread, NULL);      //blocks until right_block merged
+    merge(&left_block, &right_block);
     printf("---ending\n");
     printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
     exit(EXIT_SUCCESS);
