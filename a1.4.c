@@ -25,6 +25,10 @@ struct block {
     int *first;
 };
 
+// void print_block_data(struct block *blk) {
+//     printf("size: %d address: %p\n", blk->size, blk->first);
+// }
+
 int num_threads = 1;
 long num_cores;
 pthread_mutex_t lock;
@@ -50,6 +54,7 @@ void merge(struct block *left, struct block *right) {
 void *merge_sort(void *data) {
     // print_block_data(my_data);
     struct block *my_data = (struct block *) data;
+    
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
@@ -101,6 +106,7 @@ int main(int argc, char *argv[]) {
 
     num_cores = sysconf(_SC_NPROCESSORS_ONLN);
     printf("Number of cores: %ld\n", num_cores);
+
     if (pthread_mutex_init(&lock, NULL) == -1){
         printf("Mutex creation was unsuccessful\n");
     }
