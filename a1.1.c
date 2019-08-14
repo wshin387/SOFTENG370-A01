@@ -72,13 +72,13 @@ bool is_sorted(int data[], int size) {
 
 int main(int argc, char *argv[]) {
 	long size;
-    struct rlimit limit; //rlimit struct contains two values soft and hard limit which you can change depending on what resource you want to alter, in this case we are changing the stack size 
+    struct rlimit limit; //use the rlimit struct to change the stack size 
     getrlimit(RLIMIT_STACK, &limit);
-    printf("%ld, %ld \n",limit.rlim_cur, limit.rlim_max);
+    printf("%ld, %ld \n", limit.rlim_cur, limit.rlim_max);
     limit.rlim_cur = 1024*1024*1024;
-    setrlimit(RLIMIT_STACK,&limit);
-	printf("%ld, %ld \n",limit.rlim_cur, limit.rlim_max);
-    
+    setrlimit(RLIMIT_STACK, &limit);
+	printf("%ld, %ld \n", limit.rlim_cur, limit.rlim_max);
+
     if (argc < 2) {
 		size = SIZE;
 	} else {
