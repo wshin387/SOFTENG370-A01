@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     int p[2], pid;
 
     if (pipe(p) < 0) {
-        fprintf(stderr, "Failed to pipe");
+        fprintf(stderr, "Pipe failed");
         return 1;
     }
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     pid = fork();
 
     if (pid < 0) { 
-        fprintf(stderr, "Failed to fork");  
+        fprintf(stderr, "Fork failed");  
 
     } else if (pid > 0) {
 
