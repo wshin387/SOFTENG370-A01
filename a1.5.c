@@ -64,7 +64,7 @@ void *merge_sort(void *data) {
         right_block.first = my_data->first + left_block.size;
         
         pthread_spin_lock(&lock);
-        if (num_threads < num_cores){
+        if (num_threads < num_cores) {
 
             num_threads++;
             pthread_spin_unlock(&lock);
@@ -88,7 +88,7 @@ void *merge_sort(void *data) {
             merge_sort(&right_block);
         }
 
-        merge(&left_block,&right_block);
+        merge(&left_block, &right_block);
     }
 }
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     struct rlimit limit;  //use the rlimit struct to change the stack size 
     getrlimit(RLIMIT_STACK, &limit);
     limit.rlim_cur = 1024*1024*1024;
-    setrlimit(RLIMIT_STACK,&limit);
+    setrlimit(RLIMIT_STACK, &limit);
     
     if (argc < 2) {
 		size = SIZE;

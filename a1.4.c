@@ -54,7 +54,7 @@ void merge(struct block *left, struct block *right) {
 void *merge_sort(void *data) {
     // print_block_data(my_data);
     struct block *my_data = (struct block *) data;
-    
+
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
@@ -64,7 +64,7 @@ void *merge_sort(void *data) {
         right_block.first = my_data->first + left_block.size;
 
         pthread_mutex_lock(&lock);
-        if (num_threads < num_cores){
+        if (num_threads < num_cores) {
 
             num_threads++;
             pthread_mutex_unlock(&lock);
@@ -88,7 +88,7 @@ void *merge_sort(void *data) {
             merge_sort(&right_block);
         }
 
-        merge(&left_block,&right_block);
+        merge(&left_block, &right_block);
     }
 }
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     num_cores = sysconf(_SC_NPROCESSORS_ONLN);
     printf("Number of cores: %ld\n", num_cores);
 
-    if (pthread_mutex_init(&lock, NULL) == -1){
+    if (pthread_mutex_init(&lock, NULL) == -1) {
         printf("Mutex creation was unsuccessful\n");
     }
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     struct rlimit limit; //use the rlimit struct to change the stack size 
     getrlimit(RLIMIT_STACK, &limit);
     limit.rlim_cur = 1024*1024*1024;
-    setrlimit(RLIMIT_STACK,&limit);
+    setrlimit(RLIMIT_STACK, &limit);
 
     if (argc < 2) {
 		size = SIZE;

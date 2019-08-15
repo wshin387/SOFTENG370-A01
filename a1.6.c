@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     struct rlimit limit; //use the rlimit struct to change the stack size 
     getrlimit(RLIMIT_STACK, &limit);
     limit.rlim_cur = 1024*1024*1024;
-    setrlimit(RLIMIT_STACK,&limit);
+    setrlimit(RLIMIT_STACK, &limit);
 
     if (argc < 2) {
 		size = SIZE;
