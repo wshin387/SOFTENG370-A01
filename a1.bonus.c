@@ -129,10 +129,10 @@ int main(int argc, char *argv[]) {
     shared = mmap(NULL, sizeof(struct shared_data), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     shared->num_processes = 1;
 
-    pthread_mutexattr_t attribute;
-    pthread_mutexattr_init(&attribute);
-    pthread_mutexattr_setpshared(&attribute, PTHREAD_PROCESS_SHARED);
-    if (pthread_mutex_init(&(shared->lock), &attribute)) {
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    if (pthread_mutex_init(&(shared->lock), &attr)) {
         perror("Error creating lock \n");
     }
     
