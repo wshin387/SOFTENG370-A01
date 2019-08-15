@@ -75,7 +75,7 @@ void *merge_sort(void *data) {
             pthread_attr_setstacksize(&attr, 1024*1024*1024);
             pthread_create(&thread, &attr, merge_sort, (void *) &left_block);
             merge_sort(&right_block);
-            pthread_join(thread,NULL); //blocks until right_block merged
+            pthread_join(thread, NULL); //blocks until right_block merged
 
             pthread_spin_lock(&lock);
             num_threads--;

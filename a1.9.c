@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-    if(pthread_mutex_init(&(shared->lock), &attr)) {
+    if (pthread_mutex_init(&(shared->lock), &attr)) {
         perror("Error creating lock \n");
     }
     
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < size; i++) {
         data[i] = rand()/100000;
     }
-    
+
     printf("starting---\n");
     merge_sort(&start_block);
     printf("---ending\n");
