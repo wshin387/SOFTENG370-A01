@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
     start_block.size = size;
     start_block.first = data;
     for (int i = 0; i < size; i++) {
-        data[i] = rand()/100000;
+        data[i] = rand();
     }
 
     printf("starting---\n");
