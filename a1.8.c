@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     right_block.first = start_block.first + left_block.size;
     
     printf("starting---\n");
-    //pid_t pid;
+
     int pid;
     pid = fork();
 
