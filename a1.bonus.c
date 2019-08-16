@@ -29,7 +29,7 @@ struct block {
 
 long num_cores;
 
-struct shared_data{
+struct shared_data {
     int num_processes;
     pthread_mutex_t lock;
 };
