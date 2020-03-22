@@ -15,6 +15,10 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <stdbool.h>
+#include <pthread.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define SIZE    2
 
@@ -22,6 +26,16 @@ struct block {
     int size;
     int *first;
 };
+
+long num_cores;
+
+struct shared_data {
+    int num_processes;
+    pthread_mutex_t lock;
+};
+
+struct shared_data *shared;
+int *data;
 
 // void print_block_data(struct block *blk) {
 //     printf("size: %d address: %p\n", blk->size, blk->first);
@@ -45,18 +59,53 @@ void merge(struct block *left, struct block *right) {
 }
 
 /* Merge sort the data. */
-void merge_sort(struct block *my_data) {
+void *merge_sort(void *data) {
     // print_block_data(my_data);
+    struct block *my_data = (struct block *) data;
+
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
         left_block.size = my_data->size / 2;
         left_block.first = my_data->first;
         right_block.size = left_block.size + (my_data->size % 2);
-        right_block.first = my_data->first + left_block.size;
-        merge_sort(&left_block);
-        merge_sort(&right_block);
-        merge(&left_block, &right_block);
+        right_block.first = my_data->first + left_block.size; 
+
+        pthread_mutex_lock(&(shared->lock));
+
+        if (shared->num_processes < num_cores) {
+
+            shared->num_processes++;
+            pthread_mutex_unlock(&(shared->lock));
+
+            int pid;
+            pid = fork();
+
+            if (pid < 0) { 
+                fprintf(stderr, "Fork failed" );  
+
+            } else if (pid > 0) {
+
+                //parent process
+                merge_sort(&right_block);
+                wait(NULL);
+                merge(&left_block, &right_block);
+
+            } else {
+
+                //child process
+                merge_sort(&left_block);
+                exit(0);
+
+            }
+        } else {
+
+            pthread_mutex_unlock(&(shared->lock));
+            merge_sort(&left_block);
+            merge_sort(&right_block);
+            merge(&left_block, &right_block);     
+        }
+  
     }
 }
 
@@ -71,20 +120,40 @@ bool is_sorted(int data[], int size) {
 }
 
 int main(int argc, char *argv[]) {
-	long size;
 
-	if (argc < 2) {
+    num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    printf("Number of cores: %ld\n", num_cores);
+
+    shared = mmap(NULL, sizeof(struct shared_data), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    shared->num_processes = 1;
+
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    if (pthread_mutex_init(&(shared->lock), &attr)) {
+        perror("Error creating lock \n");
+    }
+    
+	long size;
+    struct rlimit limit; //use the rlimit struct to change the stack size 
+    getrlimit(RLIMIT_STACK, &limit);
+    limit.rlim_cur = 1024*1024*1024;
+    setrlimit(RLIMIT_STACK, &limit);
+
+    if (argc < 2) {
 		size = SIZE;
 	} else {
 		size = atol(argv[1]);
 	}
     struct block start_block;
-    int data[size];
+    data[size];
+    data = mmap(NULL, sizeof(int)* size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0 );
     start_block.size = size;
     start_block.first = data;
     for (int i = 0; i < size; i++) {
         data[i] = rand();
     }
+
     printf("starting---\n");
     merge_sort(&start_block);
     printf("---ending\n");

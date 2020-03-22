@@ -15,6 +15,8 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <stdbool.h>
+#include <pthread.h>
+#include <unistd.h>
 
 #define SIZE    2
 
@@ -26,6 +28,10 @@ struct block {
 // void print_block_data(struct block *blk) {
 //     printf("size: %d address: %p\n", blk->size, blk->first);
 // }
+
+int num_threads = 1;
+long num_cores;
+pthread_mutex_t lock;
 
 /* Combine the two halves back together. */
 void merge(struct block *left, struct block *right) {
@@ -45,8 +51,10 @@ void merge(struct block *left, struct block *right) {
 }
 
 /* Merge sort the data. */
-void merge_sort(struct block *my_data) {
+void *merge_sort(void *data) {
     // print_block_data(my_data);
+    struct block *my_data = (struct block *) data;
+
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
@@ -54,8 +62,32 @@ void merge_sort(struct block *my_data) {
         left_block.first = my_data->first;
         right_block.size = left_block.size + (my_data->size % 2);
         right_block.first = my_data->first + left_block.size;
-        merge_sort(&left_block);
-        merge_sort(&right_block);
+
+        pthread_mutex_lock(&lock);
+        if (num_threads < num_cores) {
+
+            num_threads++;
+            pthread_mutex_unlock(&lock);
+
+            pthread_t thread; //make new thread
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);      //set size attribute
+            pthread_attr_setstacksize(&attr, 1024*1024*1024);
+            pthread_create(&thread, &attr, merge_sort, (void *) &left_block);
+            merge_sort(&right_block);
+            pthread_join(thread, NULL); //blocks until right_block merged
+
+            pthread_mutex_lock(&lock);
+            num_threads--;
+            pthread_mutex_unlock(&lock);
+
+        } else {
+
+            pthread_mutex_unlock(&lock);
+            merge_sort(&left_block);
+            merge_sort(&right_block);
+        }
+
         merge(&left_block, &right_block);
     }
 }
@@ -71,9 +103,21 @@ bool is_sorted(int data[], int size) {
 }
 
 int main(int argc, char *argv[]) {
-	long size;
 
-	if (argc < 2) {
+    num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    printf("Number of cores: %ld\n", num_cores);
+
+    if (pthread_mutex_init(&lock, NULL) == -1) {
+        printf("Mutex creation was unsuccessful\n");
+    }
+
+	long size;
+    struct rlimit limit; //use the rlimit struct to change the stack size 
+    getrlimit(RLIMIT_STACK, &limit);
+    limit.rlim_cur = 1024*1024*1024;
+    setrlimit(RLIMIT_STACK, &limit);
+
+    if (argc < 2) {
 		size = SIZE;
 	} else {
 		size = atol(argv[1]);
@@ -85,9 +129,11 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < size; i++) {
         data[i] = rand();
     }
+
     printf("starting---\n");
     merge_sort(&start_block);
     printf("---ending\n");
+    pthread_mutex_destroy(&lock);
     printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
     exit(EXIT_SUCCESS);
 }

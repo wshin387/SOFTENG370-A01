@@ -2,7 +2,7 @@
     The Merge Sort to use for Operating Systems Assignment 1 2019
     written by Robert Sheehan
 
-    Modified by: William Shin
+    Modified by: William Shin 
     UPI: wshi593
 
     By submitting a program you are claiming that you and only you have made
@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #define SIZE    2
 
@@ -22,6 +23,7 @@ struct block {
     int size;
     int *first;
 };
+
 
 // void print_block_data(struct block *blk) {
 //     printf("size: %d address: %p\n", blk->size, blk->first);
@@ -45,8 +47,9 @@ void merge(struct block *left, struct block *right) {
 }
 
 /* Merge sort the data. */
-void merge_sort(struct block *my_data) {
+void *merge_sort(void *data) {
     // print_block_data(my_data);
+    struct block *my_data = (struct block *) data;
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
@@ -56,7 +59,7 @@ void merge_sort(struct block *my_data) {
         right_block.first = my_data->first + left_block.size;
         merge_sort(&left_block);
         merge_sort(&right_block);
-        merge(&left_block, &right_block);
+        merge(&left_block, &right_block);       
     }
 }
 
@@ -72,8 +75,12 @@ bool is_sorted(int data[], int size) {
 
 int main(int argc, char *argv[]) {
 	long size;
+    struct rlimit limit; //use the rlimit struct to change the stack size 
+    getrlimit(RLIMIT_STACK, &limit);
+    limit.rlim_cur = 1024*1024*1024;
+    setrlimit(RLIMIT_STACK, &limit);
 
-	if (argc < 2) {
+    if (argc < 2) {
 		size = SIZE;
 	} else {
 		size = atol(argv[1]);
@@ -85,9 +92,51 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < size; i++) {
         data[i] = rand();
     }
+
+    struct block left_block;
+    struct block right_block;
+
+    left_block.size = start_block.size / 2;     //set up left block
+    left_block.first = start_block.first;
+
+    right_block.size = left_block.size + (start_block.size % 2);    //set up right block
+    right_block.first = start_block.first + left_block.size;
+    
+    int p[2], pid;
+
+    if (pipe(p) < 0) {
+        fprintf(stderr, "Pipe failed");
+        return 1;
+    }
+
     printf("starting---\n");
-    merge_sort(&start_block);
-    printf("---ending\n");
-    printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
-    exit(EXIT_SUCCESS);
+
+    pid = fork();
+
+    if (pid < 0) { 
+        fprintf(stderr, "Fork failed");  
+
+    } else if (pid > 0) {
+
+        //parent process
+        close(p[1]);    //close the input side
+        merge_sort(&right_block);
+        read(p[0], left_block.first, left_block.size * (sizeof(int)));
+        close(p[0]);
+
+        merge(&left_block, &right_block);
+        printf("---ending\n");
+        printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
+        exit(EXIT_SUCCESS);
+
+    } else {
+
+        //child process
+        close(p[0]);    //close the output side
+        merge_sort(&left_block);
+        write(p[1], left_block.first, left_block.size * (sizeof(int)));
+        close(p[1]);
+        return(0);
+    }
+
 }

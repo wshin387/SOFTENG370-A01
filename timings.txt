@@ -1,0 +1,81 @@
+a1.1
+real    0m22.205s
+user    0m22.061s
+sys     0m0.144s
+
+
+a1.2
+real    0m12.108s
+user    0m22.213s
+sys     0m0.236s
+
+a1.3
+Segmentation fault (core dumped)
+real    0m1.831s
+user    0m0.960s
+sys     0m1.929s
+
+a1.4
+real    0m13.595s
+user    0m32.627s
+sys     0m6.679s
+
+a1.5
+real    0m10.288s
+user    0m28.629s
+sys     0m0.288s
+
+
+a1.6
+real    0m10.136s
+user    0m9.768s
+sys     0m0.332s
+
+PC2
+real    0m12.185s
+user    0m11.868s
+sys     0m0.268s
+
+
+a1.7
+real    0m12.633s
+user    0m8.410s
+sys     0m3.789s
+
+PC2
+real    0m13.316s
+user    0m9.822s
+sys     0m3.213s
+
+
+a1.8
+real    0m10.020s
+user    0m18.358s
+sys     0m0.280s
+
+PC2
+real    0m12.163s
+user    0m22.223s
+sys     0m0.296s
+
+
+a1.9
+real    0m12.342s
+user    0m30.097s
+sys     0m13.469s
+
+PC2
+real    0m16.064s
+user    0m28.583s
+sys     0m7.224s
+
+
+bonus
+real    0m6.221s
+user    0m5.750s
+sys     0m0.297s
+
+PC2
+real    0m7.609s
+user    0m7.123s
+sys     0m0.307s

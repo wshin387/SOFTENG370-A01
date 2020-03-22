@@ -15,6 +15,10 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <stdbool.h>
+#include <pthread.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 #define SIZE    2
 
@@ -22,6 +26,8 @@ struct block {
     int size;
     int *first;
 };
+
+int *data;
 
 // void print_block_data(struct block *blk) {
 //     printf("size: %d address: %p\n", blk->size, blk->first);
@@ -45,8 +51,9 @@ void merge(struct block *left, struct block *right) {
 }
 
 /* Merge sort the data. */
-void merge_sort(struct block *my_data) {
+void *merge_sort(void *data) {
     // print_block_data(my_data);
+    struct block *my_data = (struct block *) data;
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
@@ -56,7 +63,7 @@ void merge_sort(struct block *my_data) {
         right_block.first = my_data->first + left_block.size;
         merge_sort(&left_block);
         merge_sort(&right_block);
-        merge(&left_block, &right_block);
+        merge(&left_block, &right_block);       
     }
 }
 
@@ -72,22 +79,57 @@ bool is_sorted(int data[], int size) {
 
 int main(int argc, char *argv[]) {
 	long size;
+    struct rlimit limit; //use the rlimit struct to change the stack size 
+    getrlimit(RLIMIT_STACK, &limit);
+    limit.rlim_cur = 1024*1024*1024;
+    setrlimit(RLIMIT_STACK, &limit);
 
-	if (argc < 2) {
+    if (argc < 2) {
 		size = SIZE;
 	} else {
 		size = atol(argv[1]);
 	}
     struct block start_block;
-    int data[size];
+    data[size];
+    data = mmap(NULL, sizeof(int) * size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     start_block.size = size;
     start_block.first = data;
     for (int i = 0; i < size; i++) {
         data[i] = rand();
     }
+
+    struct block left_block;
+    struct block right_block;
+
+    left_block.size = start_block.size / 2;
+    left_block.first = start_block.first;
+
+    right_block.size = left_block.size + (start_block.size % 2);
+    right_block.first = start_block.first + left_block.size;
+    
     printf("starting---\n");
-    merge_sort(&start_block);
-    printf("---ending\n");
-    printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
-    exit(EXIT_SUCCESS);
+
+    int pid;
+    pid = fork();
+
+    if (pid < 0) { 
+        fprintf(stderr, "Fork failed" );  
+
+    } else if (pid > 0) {
+
+        //parent process
+        merge_sort(&right_block);
+        wait(NULL); //wait for child
+        merge(&left_block, &right_block);
+        printf("---ending\n");
+        printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
+        exit(EXIT_SUCCESS);
+
+    } else {
+
+        //child process
+        merge_sort(&left_block);
+        exit(0);
+    }
+
 }

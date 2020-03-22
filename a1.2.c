@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #define SIZE    2
 
@@ -45,8 +46,9 @@ void merge(struct block *left, struct block *right) {
 }
 
 /* Merge sort the data. */
-void merge_sort(struct block *my_data) {
+void *merge_sort(void *data) {
     // print_block_data(my_data);
+    struct block *my_data = (struct block *) data;
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
@@ -56,7 +58,7 @@ void merge_sort(struct block *my_data) {
         right_block.first = my_data->first + left_block.size;
         merge_sort(&left_block);
         merge_sort(&right_block);
-        merge(&left_block, &right_block);
+        merge(&left_block, &right_block);       
     }
 }
 
@@ -72,8 +74,12 @@ bool is_sorted(int data[], int size) {
 
 int main(int argc, char *argv[]) {
 	long size;
+    struct rlimit limit; //use the rlimit struct to change the stack size 
+    getrlimit(RLIMIT_STACK, &limit);
+    limit.rlim_cur = 1024*1024*1024;
+    setrlimit(RLIMIT_STACK, &limit);
 
-	if (argc < 2) {
+    if (argc < 2) {
 		size = SIZE;
 	} else {
 		size = atol(argv[1]);
@@ -85,8 +91,26 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < size; i++) {
         data[i] = rand();
     }
+
+    struct block left_block;
+    struct block right_block;
+
+    left_block.size = start_block.size / 2;     //set up left block
+    left_block.first = start_block.first;
+
+    right_block.size = left_block.size + (start_block.size % 2);    //set up right block
+    right_block.first = start_block.first + left_block.size;
+
+    pthread_t thread;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);       //set the stack size attribute
+    pthread_attr_setstacksize(&attr, 1024*1024*1024);
+
+    pthread_create(&thread, &attr, merge_sort, (void *) &left_block);      
     printf("starting---\n");
-    merge_sort(&start_block);
+    merge_sort(&right_block);
+    pthread_join(thread, NULL);      //blocks until right_block merged
+    merge(&left_block, &right_block);
     printf("---ending\n");
     printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
     exit(EXIT_SUCCESS);

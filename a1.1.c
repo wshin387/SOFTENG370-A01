@@ -56,7 +56,7 @@ void merge_sort(struct block *my_data) {
         right_block.first = my_data->first + left_block.size;
         merge_sort(&left_block);
         merge_sort(&right_block);
-        merge(&left_block, &right_block);
+        merge(&left_block, &right_block);       
     }
 }
 
@@ -72,8 +72,14 @@ bool is_sorted(int data[], int size) {
 
 int main(int argc, char *argv[]) {
 	long size;
+    struct rlimit limit; //use the rlimit struct to change the stack size 
+    getrlimit(RLIMIT_STACK, &limit);
+    printf("%ld, %ld \n", limit.rlim_cur, limit.rlim_max);
+    limit.rlim_cur = 1024*1024*1024;
+    setrlimit(RLIMIT_STACK, &limit);
+	printf("%ld, %ld \n", limit.rlim_cur, limit.rlim_max);
 
-	if (argc < 2) {
+    if (argc < 2) {
 		size = SIZE;
 	} else {
 		size = atol(argv[1]);
